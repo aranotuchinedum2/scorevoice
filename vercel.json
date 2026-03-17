@@ -1,12 +1,7 @@
 {
   "functions": {
-    "api/transcribe.js": { "maxDuration": 60 }
+    "api/transcribe.js": {
+      "maxDuration": 60
+    }
   }
 }
-```
-
----
-
-## `.env.local` (local dev, never commit)
-```
-ANTHROPIC_API_KEY=sk-ant-your-key-here

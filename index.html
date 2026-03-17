@@ -281,7 +281,7 @@ async function convert(){
   try{
     lstep.textContent='AI reading notation…';
     // ── Calls YOUR proxy at /api/transcribe — no API key in frontend ──
-    var res=await fetch('/api/transcribe',{
+    var res = await fetch('https://scorevoice.YOUR_SUBDOMAIN.workers.dev', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:8192,messages:[{role:'user',content:content}]})
