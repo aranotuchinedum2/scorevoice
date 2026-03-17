@@ -284,7 +284,7 @@ async function convert(){
     var res = await fetch('https://scorevoice.scorevoice.workers.dev', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:16000,messages:[{role:'user',content:content}]})
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:16000,temperature:0,messages:[{role:'user',content:content}]})
     });
     if(!res.ok){var ej=await res.json().catch(function(){return{}});throw new Error('API '+res.status+': '+(ej.error&&ej.error.message||res.statusText))}
     lstep.textContent='Parsing notation…';
