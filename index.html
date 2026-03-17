@@ -18,6 +18,17 @@
 .pill{padding:2px 10px;border-radius:12px;font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;border:1px solid var(--gold-b);color:var(--color-text-secondary)}
 .pill.pdf{border-color:var(--gold-m);color:var(--gold-m)}
 #fi{display:none}
+.key-row{display:flex;gap:8px;margin-top:.9rem;align-items:stretch}
+.key-input{flex:1;padding:.65rem .8rem;background:var(--color-background-secondary);border:1px solid var(--gold-b);border-radius:6px;color:var(--color-text-primary);font-family:monospace;font-size:.82rem;outline:none;transition:border-color .2s}
+.key-input:focus{border-color:var(--gold)}
+.key-input::placeholder{color:var(--color-text-secondary);font-family:Georgia,serif;font-style:italic;font-size:.78rem}
+.key-save{padding:.65rem 1rem;background:transparent;border:1px solid var(--gold-b);border-radius:6px;color:var(--color-text-secondary);font-family:Georgia,serif;font-size:.78rem;cursor:pointer;white-space:nowrap;transition:border-color .2s,color .2s}
+.key-save:hover{border-color:var(--gold);color:var(--gold)}
+.key-status{font-size:.7rem;margin-top:.4rem;min-height:1rem;font-style:italic}
+.key-ok{color:#1D9E75}.key-missing{color:#c0392b}
+.conv-btn{display:none;width:100%;margin-top:.9rem;padding:.9rem;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:Georgia,serif;font-size:1.05rem;font-weight:400;letter-spacing:.12em;cursor:pointer;transition:background .25s,color .25s;border-radius:4px;text-transform:uppercase}
+.conv-btn:hover{background:var(--gold);color:var(--color-background-primary)}
+.conv-btn:disabled{opacity:.4;cursor:not-allowed}
 .prev-wrap{display:none;margin-top:.9rem;border:1px solid var(--gold-b);border-radius:8px;overflow:hidden;background:var(--color-background-secondary)}
 #pdf-pages{display:flex;gap:0;flex-direction:column}
 .pdf-pg-wrap{position:relative;border-bottom:1px solid var(--gold-b)}
@@ -30,9 +41,6 @@
 .prev-meta{font-size:.7rem;color:var(--gold-m)}
 .btn-rm{background:none;border:none;color:var(--color-text-secondary);cursor:pointer;font-size:.75rem;padding:2px 6px;transition:color .2s}
 .btn-rm:hover{color:#c0392b}
-.conv-btn{display:none;width:100%;margin-top:.9rem;padding:.9rem;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:Georgia,serif;font-size:1.05rem;font-weight:400;letter-spacing:.12em;cursor:pointer;transition:background .25s,color .25s;border-radius:4px;text-transform:uppercase}
-.conv-btn:hover{background:var(--gold);color:var(--color-background-primary)}
-.conv-btn:disabled{opacity:.4;cursor:not-allowed}
 .loading{display:none;margin-top:.9rem;text-align:center;padding:2.2rem;border:1px solid var(--gold-b);border-radius:8px;background:var(--color-background-secondary)}
 .dots{display:flex;justify-content:center;gap:7px;margin-bottom:1rem}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);animation:db 1.2s ease-in-out infinite}
@@ -88,6 +96,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
     </div>
   </div>
 
+  <!-- 1. Drop zone -->
   <div id="uz" class="upzone z">
     <span class="up-ico">&#127932;</span>
     <h2 class="up-ttl">Drop your score here</h2>
@@ -101,6 +110,17 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
     <input type="file" id="fi" accept="image/*,.pdf,application/pdf">
   </div>
 
+  <!-- 2. API key -->
+  <div class="key-row z">
+    <input class="key-input" id="ki" type="password" placeholder="Paste your Anthropic API key — sk-ant-...">
+    <button class="key-save" id="ks-btn">Save Key</button>
+  </div>
+  <div class="key-status z" id="kst"></div>
+
+  <!-- 3. Transcribe button -->
+  <button class="conv-btn z" id="cb">&#9758; Transcribe &amp; Play</button>
+
+  <!-- 4. File preview — now BELOW the button -->
   <div class="prev-wrap z" id="pw">
     <div id="pdf-pages"></div>
     <img id="prev-img" alt="Sheet music preview" style="display:none">
@@ -111,16 +131,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
     </div>
   </div>
 
-  <button class="conv-btn z" id="cb">&#9758; Transcribe &amp; Play</button>
-
+  <!-- 5. Loading / error / player -->
   <div class="loading z" id="ld">
-    <div class="dots">
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-    </div>
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
     <p class="ld-txt" id="lt">Reading the score&hellip;</p>
-    <p class="ld-step" id="ls">Initializing</p>
+    <p class="ld-step" id="lstep">Initializing</p>
   </div>
-
   <div class="err-box z" id="eb"></div>
 
   <div class="player z" id="pl">
@@ -130,20 +146,20 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
         <div class="p-info">
           <h2 id="st">Unknown Score</h2>
           <div class="meta">
-            <div class="mi"><span class="ml">Key</span><span id="ks">C major</span></div>
+            <div class="mi"><span class="ml">Key</span><span id="key-sig">C major</span></div>
             <div class="mi"><span class="ml">Tempo</span><span id="td">120 &#9834;</span></div>
-            <div class="mi"><span class="ml">Time</span><span id="ts">4/4</span></div>
+            <div class="mi"><span class="ml">Time</span><span id="tsi">4/4</span></div>
             <div class="mi"><span class="ml">Measures</span><span id="mc">0</span></div>
             <div class="mi"><span class="ml">Pages</span><span id="pgc">1</span></div>
           </div>
         </div>
       </div>
       <div class="pp">
-        <div class="ptrack" id="pt"><div class="pfill" id="pf"></div></div>
+        <div class="ptrack"><div class="pfill" id="pf"></div></div>
         <div class="ptimes"><span id="te">0:00</span><span id="tt">0:00</span></div>
       </div>
       <div class="pc">
-        <button class="cbtn" id="stopb" title="Stop">&#9632;</button>
+        <button class="cbtn" id="stopb">&#9632;</button>
         <button class="cbtn pbtn" id="playb">&#9654;</button>
         <div class="tctl">
           <span class="tlbl">Tempo</span>
@@ -165,7 +181,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <div class="sig z"><span>// This app was built by CeeJay for Chinedum Aranotu &ndash; 2026</span></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.mjs" type="module" id="pdfjs-mod"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 <script type="module">
 import * as PDFJS from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.mjs';
@@ -176,15 +191,30 @@ window._PDFJS=PDFJS;
 var fileB64=null,fileMime='image/jpeg',fileIsPDF=false,pdfPageCount=1;
 var musicData=null,synths={},baseEvents=[],isPlaying=false,playStart=0,totalDur=0,progTimer=null,curTempo=120;
 var vcColors=['#BA7517','#1D9E75','#378ADD','#D85A30','#993556','#533AB7'];
+var STORAGE_KEY='sv_apikey';
 
-var uz=document.getElementById('uz'),fi=document.getElementById('fi'),pw=document.getElementById('pw'),prevImg=document.getElementById('prev-img'),pdfPages=document.getElementById('pdf-pages'),pn=document.getElementById('pn'),pm=document.getElementById('pm'),rmb=document.getElementById('rmb'),cb=document.getElementById('cb'),ld=document.getElementById('ld'),ls=document.getElementById('ls'),lt=document.getElementById('lt'),eb=document.getElementById('eb'),pl=document.getElementById('pl'),playb=document.getElementById('playb'),stopb=document.getElementById('stopb'),tsl=document.getElementById('tsl'),tvEl=document.getElementById('tv'),pfEl=document.getElementById('pf'),teEl=document.getElementById('te'),ttEl=document.getElementById('tt');
+var ki=document.getElementById('ki'),ksbtn=document.getElementById('ks-btn'),kst=document.getElementById('kst');
+var uz=document.getElementById('uz'),fi=document.getElementById('fi'),pw=document.getElementById('pw'),prevImg=document.getElementById('prev-img'),pdfPages=document.getElementById('pdf-pages'),pn=document.getElementById('pn'),pm=document.getElementById('pm'),rmb=document.getElementById('rmb'),cb=document.getElementById('cb'),ld=document.getElementById('ld'),lstep=document.getElementById('lstep'),lt=document.getElementById('lt'),eb=document.getElementById('eb'),pl=document.getElementById('pl'),playb=document.getElementById('playb'),stopb=document.getElementById('stopb'),tsl=document.getElementById('tsl'),tvEl=document.getElementById('tv'),pfEl=document.getElementById('pf'),teEl=document.getElementById('te'),ttEl=document.getElementById('tt');
+
+function getSavedKey(){try{return sessionStorage.getItem(STORAGE_KEY)||''}catch(e){return''}}
+function saveKey(k){try{sessionStorage.setItem(STORAGE_KEY,k)}catch(e){}}
+function getKey(){return ki.value.trim()||getSavedKey()}
+
+(function(){var k=getSavedKey();if(k){ki.value=k;kst.className='key-status key-ok';kst.textContent='API key loaded from session';}else{kst.className='key-status key-missing';kst.textContent='Add your Anthropic API key to get started';}})();
+
+ksbtn.addEventListener('click',function(){
+  var k=ki.value.trim();
+  if(!k){kst.className='key-status key-missing';kst.textContent='Please enter a key first';return}
+  if(!k.startsWith('sk-ant-')){kst.className='key-status key-missing';kst.textContent='Key should start with sk-ant-...';return}
+  saveKey(k);kst.className='key-status key-ok';kst.textContent='Key saved for this session';
+});
 
 uz.addEventListener('click',function(){fi.click()});
 uz.addEventListener('dragover',function(e){e.preventDefault();uz.classList.add('over')});
 uz.addEventListener('dragleave',function(){uz.classList.remove('over')});
 uz.addEventListener('drop',function(e){e.preventDefault();uz.classList.remove('over');var f=e.dataTransfer.files[0];if(f)loadFile(f)});
 fi.addEventListener('change',function(e){if(e.target.files[0])loadFile(e.target.files[0])});
-rmb.addEventListener('click',function(){reset()});
+rmb.addEventListener('click',reset);
 cb.addEventListener('click',convert);
 playb.addEventListener('click',function(){if(isPlaying)pausePB();else startPB()});
 stopb.addEventListener('click',stopPB);
@@ -194,98 +224,82 @@ function reset(){
   fileB64=null;fileIsPDF=false;
   pw.style.display='none';cb.style.display='none';uz.style.display='block';
   pl.style.display='none';eb.style.display='none';
-  pdfPages.innerHTML='';prevImg.style.display='none';
-  fi.value='';stopPB();
+  pdfPages.innerHTML='';prevImg.style.display='none';fi.value='';stopPB();
 }
 
 function loadFile(f){
   var isPDF=f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf');
-  fileIsPDF=isPDF;
-  fileMime=isPDF?'application/pdf':(f.type||'image/jpeg');
+  fileIsPDF=isPDF;fileMime=isPDF?'application/pdf':(f.type||'image/jpeg');
   var r=new FileReader();
   r.onload=function(e){
     fileB64=e.target.result.split(',')[1];
-    pn.textContent=f.name;
-    eb.style.display='none';
-    pl.style.display='none';
+    pn.textContent=f.name;eb.style.display='none';pl.style.display='none';
     uz.style.display='none';
-    pw.style.display='block';
-    cb.style.display='block';
-    if(isPDF){
-      prevImg.style.display='none';
-      renderPDFPreview(e.target.result,f);
-    } else {
-      pdfPages.innerHTML='';
-      prevImg.src=e.target.result;
-      prevImg.style.display='block';
-      pm.textContent='Image';
-    }
+    cb.style.display='block';   /* button appears first */
+    pw.style.display='block';   /* preview appears below button */
+    if(isPDF){prevImg.style.display='none';renderPDFPreview(e.target.result);}
+    else{pdfPages.innerHTML='';prevImg.src=e.target.result;prevImg.style.display='block';pm.textContent='Image';}
   };
   r.readAsDataURL(f);
 }
 
-async function renderPDFPreview(dataURL,f){
+async function renderPDFPreview(dataURL){
   pdfPages.innerHTML='<div style="padding:1rem;text-align:center;font-size:.8rem;color:var(--color-text-secondary);font-style:italic">Rendering PDF pages&hellip;</div>';
   var PDFJS=window._PDFJS;
-  if(!PDFJS){setTimeout(function(){renderPDFPreview(dataURL,f)},400);return}
+  if(!PDFJS){setTimeout(function(){renderPDFPreview(dataURL)},400);return}
   try{
-    var ab=await (await fetch(dataURL)).arrayBuffer();
+    var ab=await(await fetch(dataURL)).arrayBuffer();
     var pdfDoc=await PDFJS.getDocument({data:ab}).promise;
-    pdfPageCount=pdfDoc.numPages;
-    pm.textContent=pdfPageCount+' page'+(pdfPageCount>1?'s':'');
+    pdfPageCount=pdfDoc.numPages;pm.textContent=pdfPageCount+' page'+(pdfPageCount>1?'s':'');
     pdfPages.innerHTML='';
-    var maxPreview=Math.min(pdfPageCount,6);
-    for(var i=1;i<=maxPreview;i++){
+    var maxP=Math.min(pdfPageCount,6);
+    for(var i=1;i<=maxP;i++){
       var page=await pdfDoc.getPage(i);
       var vp=page.getViewport({scale:1.5});
-      var wrap=document.createElement('div');
-      wrap.className='pdf-pg-wrap';
-      var canvas=document.createElement('canvas');
-      canvas.width=vp.width;canvas.height=vp.height;
-      var badge=document.createElement('div');
-      badge.className='pg-badge';badge.textContent='Page '+i+(pdfPageCount>6&&i===maxPreview?' (+ '+(pdfPageCount-maxPreview)+' more)':'');
-      wrap.appendChild(canvas);wrap.appendChild(badge);
-      pdfPages.appendChild(wrap);
+      var wrap=document.createElement('div');wrap.className='pdf-pg-wrap';
+      var canvas=document.createElement('canvas');canvas.width=vp.width;canvas.height=vp.height;
+      var badge=document.createElement('div');badge.className='pg-badge';
+      badge.textContent='Page '+i+(pdfPageCount>6&&i===maxP?' (+ '+(pdfPageCount-maxP)+' more)':'');
+      wrap.appendChild(canvas);wrap.appendChild(badge);pdfPages.appendChild(wrap);
       await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
     }
-  }catch(err){
-    pdfPages.innerHTML='<div style="padding:1rem;color:#c0392b;font-size:.8rem">PDF preview failed: '+err.message+'</div>';
-  }
+  }catch(err){pdfPages.innerHTML='<div style="padding:1rem;color:#c0392b;font-size:.8rem">PDF preview failed: '+err.message+'</div>';}
 }
 
 var DUR={'1n':4,'2n':2,'4n':1,'8n':.5,'16n':.25,'32n':.125,'d1n':6,'d2n':3,'d4n':1.5,'d8n':.75,'d16n':.375,'4t':2/3,'8t':1/3,'2t':4/3};
 
 async function convert(){
   if(!fileB64)return;
-  ld.style.display='block';eb.style.display='none';pl.style.display='none';
-  cb.disabled=true;stopPB();
-  lt.textContent=fileIsPDF?'Reading '+pdfPageCount+' page'+(pdfPageCount>1?'s':'')+'…':'Reading the score…';
-  ls.textContent='Sending to AI';
-
-  var prompt='You are an expert orchestral music notation reader. Analyze this sheet music'+(fileIsPDF?' PDF (all pages)':(': image'))+' carefully.\n\nReturn ONLY a raw JSON object — no markdown, no backticks, no preamble. Just the JSON.\n\n{\n  "title": "detected title or Unknown",\n  "tempo": 100,\n  "timeSignature": [4,4],\n  "keySignature": "G major",\n  "totalMeasures": 8,\n  "voices": [\n    {\n      "name": "Violin I",\n      "instrument": "violin",\n      "measures": [\n        {"number":1,"notes":[{"pitch":"G5","duration":"4n"},{"pitch":"rest","duration":"4n"}]}\n      ]\n    }\n  ]\n}\n\nRules:\n- pitch: scientific notation. C4=middle C. Sharps: F#4. Flats: Bb4, Eb3, Ab4.\n- duration: "1n" whole "2n" half "4n" quarter "8n" eighth "16n" sixteenth. Dotted: "d2n" "d4n" "d8n". Triplets: "4t" "8t".\n- rests: pitch="rest"\n- Identify ALL string staves across ALL pages: Violin I, Violin II, Viola, Cello, Double Bass.\n- If only one stave, name it "Melody".\n- Extract EVERY measure on EVERY page. Be thorough and complete.';
-
-  var content;
-  if(fileIsPDF){
-    content=[
-      {type:'document',source:{type:'base64',media_type:'application/pdf',data:fileB64}},
-      {type:'text',text:prompt}
-    ];
-  } else {
-    content=[
-      {type:'image',source:{type:'base64',media_type:fileMime,data:fileB64}},
-      {type:'text',text:prompt}
-    ];
+  var apiKey=getKey();
+  if(!apiKey||!apiKey.startsWith('sk-ant-')){
+    eb.style.display='block';
+    eb.textContent='Please enter your Anthropic API key above (starts with sk-ant-...). Get one at console.anthropic.com';
+    return;
   }
+  ld.style.display='block';eb.style.display='none';pl.style.display='none';cb.disabled=true;stopPB();
+  lt.textContent=fileIsPDF?'Reading '+pdfPageCount+' page'+(pdfPageCount>1?'s':'')+'…':'Reading the score…';
+  lstep.textContent='Sending to AI';
+
+  var prompt='You are an expert orchestral music notation reader. Analyze this sheet music'+(fileIsPDF?' PDF (all pages)':' image')+' carefully.\n\nReturn ONLY a raw JSON object — no markdown, no backticks, no preamble. Just the JSON.\n\n{"title":"detected title or Unknown","tempo":100,"timeSignature":[4,4],"keySignature":"G major","totalMeasures":8,"voices":[{"name":"Violin I","instrument":"violin","measures":[{"number":1,"notes":[{"pitch":"G5","duration":"4n"},{"pitch":"rest","duration":"4n"}]}]}]}\n\nRules:\n- pitch: scientific notation. C4=middle C. Sharps: F#4. Flats: Bb4 Eb3 Ab4.\n- duration: 1n whole 2n half 4n quarter 8n eighth 16n sixteenth. Dotted: d2n d4n d8n. Triplets: 4t 8t.\n- rests: pitch="rest"\n- Identify ALL string staves across ALL pages: Violin I Violin II Viola Cello Double Bass.\n- If one stave, name it Melody.\n- Extract EVERY measure on EVERY page. Be complete.';
+
+  var content=fileIsPDF
+    ?[{type:'document',source:{type:'base64',media_type:'application/pdf',data:fileB64}},{type:'text',text:prompt}]
+    :[{type:'image',source:{type:'base64',media_type:fileMime,data:fileB64}},{type:'text',text:prompt}];
 
   try{
-    ls.textContent=fileIsPDF?'AI reading all pages…':'AI reading notation…';
+    lstep.textContent='AI reading notation…';
     var res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:8192,messages:[{role:'user',content:content}]})
     });
     if(!res.ok){var ej=await res.json().catch(function(){return{}});throw new Error('API '+res.status+': '+(ej.error&&ej.error.message||res.statusText))}
-    ls.textContent='Parsing notation…';
+    lstep.textContent='Parsing notation…';
     var d=await res.json();
     var raw=d.content.filter(function(b){return b.type==='text'}).map(function(b){return b.text}).join('');
     var js=raw.trim();
@@ -293,22 +307,21 @@ async function convert(){
     var m2=js.match(/\{[\s\S]+\}/);if(m2)js=m2[0];
     musicData=JSON.parse(js);
     if(!musicData.voices||!musicData.voices.length)throw new Error('No musical voices found in the score');
-    ls.textContent='Building string synthesizer…';
+    lstep.textContent='Building string synthesizer…';
     await buildSynths(musicData);
-    ls.textContent='Scheduling playback…';
+    lstep.textContent='Scheduling playback…';
     buildEvents(musicData);
     ld.style.display='none';cb.disabled=false;
     showPlayer(musicData);
   }catch(err){
     ld.style.display='none';cb.disabled=false;
     eb.style.display='block';
-    eb.textContent='Could not read score: '+err.message+'. For PDFs: ensure the file is not password-protected. For images: try better lighting and contrast.';
+    eb.textContent='Error: '+err.message;
   }
 }
 
 async function buildSynths(data){
-  Object.values(synths).forEach(function(s){try{s.dispose()}catch(e){}});
-  synths={};
+  Object.values(synths).forEach(function(s){try{s.dispose()}catch(e){}});synths={};
   var rev=new Tone.Reverb({decay:3,wet:0.3});await rev.ready;
   var master=new Tone.Volume(-3).toDestination();rev.connect(master);
   var cfgs={'violin i':{cut:4200,att:.07,rel:.95,vol:0},'violin ii':{cut:3800,att:.08,rel:1,vol:-2},'violin':{cut:4000,att:.07,rel:.9,vol:0},'viola':{cut:2800,att:.1,rel:1.1,vol:-2},'cello':{cut:2000,att:.12,rel:1.5,vol:-1},'double bass':{cut:1400,att:.15,rel:1.8,vol:-3},'bass':{cut:1400,att:.15,rel:1.8,vol:-3},'melody':{cut:3500,att:.08,rel:1,vol:0}};
@@ -342,7 +355,7 @@ async function startPB(){
   if(!baseEvents.length)return;
   await Tone.start();
   var s=spb(curTempo);
-  var maxB=baseEvents.length?Math.max.apply(null,baseEvents.map(function(e){return e.beatT+e.beatD})):0;
+  var maxB=Math.max.apply(null,baseEvents.map(function(e){return e.beatT+e.beatD}));
   totalDur=maxB*s;ttEl.textContent=fmt(totalDur);
   var now=Tone.now()+.1;playStart=now;isPlaying=true;
   baseEvents.forEach(function(ev){
@@ -375,10 +388,10 @@ function fmt(s){var m=Math.floor(s/60);var sc=Math.floor(s%60);return m+':'+(sc<
 
 function showPlayer(data){
   document.getElementById('st').textContent=data.title||'Untitled Score';
-  document.getElementById('ks').textContent=data.keySignature||'Unknown';
+  document.getElementById('key-sig').textContent=data.keySignature||'Unknown';
   curTempo=data.tempo||120;
   document.getElementById('td').textContent=curTempo+'\u266a';
-  document.getElementById('ts').textContent=data.timeSignature?data.timeSignature.join('/'):'4/4';
+  document.getElementById('tsi').textContent=data.timeSignature?data.timeSignature.join('/'):'4/4';
   document.getElementById('mc').textContent=data.totalMeasures||'?';
   document.getElementById('pgc').textContent=fileIsPDF?pdfPageCount:'1';
   tsl.value=curTempo;tvEl.textContent=curTempo;
@@ -388,12 +401,11 @@ function showPlayer(data){
   var vl=document.getElementById('vl');vl.innerHTML='';
   (data.voices||[]).forEach(function(v,i){
     var nc=(v.measures||[]).reduce(function(a,m){return a+(m.notes||[]).length},0);
-    var col=vcColors[i%vcColors.length];
-    vl.innerHTML+='<div class="vi"><div class="vdot" style="background:'+col+'"></div><span class="vn">'+v.name+'</span><span class="vnc">'+nc+' notes</span></div>';
+    vl.innerHTML+='<div class="vi"><div class="vdot" style="background:'+vcColors[i%vcColors.length]+'"></div><span class="vn">'+v.name+'</span><span class="vnc">'+nc+' notes</span></div>';
   });
   var ng=document.getElementById('ng');ng.innerHTML='';
   baseEvents.slice(0,100).forEach(function(ev){ng.innerHTML+='<span class="nc">'+ev.pitch+'</span>'});
-  if(baseEvents.length>100)ng.innerHTML+='<span class="nc">+'+( baseEvents.length-100)+' more</span>';
+  if(baseEvents.length>100)ng.innerHTML+='<span class="nc">+'+(baseEvents.length-100)+' more</span>';
   pl.style.display='block';
 }
 </script>
