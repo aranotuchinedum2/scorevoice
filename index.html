@@ -284,15 +284,48 @@ async function convert(){
     var res = await fetch('https://scorevoice.scorevoice.workers.dev', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:8192,messages:[{role:'user',content:content}]})
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:16000,messages:[{role:'user',content:content}]})
     });
     if(!res.ok){var ej=await res.json().catch(function(){return{}});throw new Error('API '+res.status+': '+(ej.error&&ej.error.message||res.statusText))}
     lstep.textContent='Parsing notation…';
     var d=await res.json();
     var raw=d.content.filter(function(b){return b.type==='text'}).map(function(b){return b.text}).join('');
     var js=raw.trim();
+
+    // strip markdown fences if present
     var m1=js.match(/```(?:json)?\s*([\s\S]+?)\s*```/);if(m1)js=m1[1];
-    var m2=js.match(/\{[\s\S]+\}/);if(m2)js=m2[0];
+    // extract outermost JSON object
+    var m2=js.match(/\{[\s\S]+/);if(m2)js=m2[0];
+
+    // ── JSON repair: close any unclosed brackets/braces ──
+    function repairJSON(str){
+      // remove trailing comma before a closing bracket or brace
+      str=str.replace(/,\s*([\]\}])/g,'$1');
+      // remove any trailing comma at the very end
+      str=str.replace(/,\s*$/,'');
+      // count and close unclosed structures
+      var stack=[];
+      var inStr=false,escape=false;
+      for(var i=0;i<str.length;i++){
+        var c=str[i];
+        if(escape){escape=false;continue}
+        if(c==='\\' && inStr){escape=true;continue}
+        if(c==='"'){inStr=!inStr;continue}
+        if(inStr)continue;
+        if(c==='{')stack.push('}');
+        else if(c==='[')stack.push(']');
+        else if(c==='}' || c===']'){
+          if(stack.length && stack[stack.length-1]===c)stack.pop();
+        }
+      }
+      // if we ended mid-string, close it
+      if(inStr)str+='"';
+      // close all open structures in reverse
+      while(stack.length)str+=stack.pop();
+      return str;
+    }
+
+    js=repairJSON(js);
     musicData=JSON.parse(js);
     if(!musicData.voices||!musicData.voices.length)throw new Error('No musical voices found');
     lstep.textContent='Building synthesizer…';
