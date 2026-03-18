@@ -51,11 +51,16 @@ body{background:#fff;min-height:100vh}
 .ph{padding:1rem 1.3rem;border-bottom:1px solid var(--gold-b);background:#fff;display:flex;gap:1rem;align-items:flex-start}
 @media(prefers-color-scheme:dark){.ph{background:#1e1e1a}}
 .p-ico{font-size:1.8rem;flex-shrink:0;line-height:1}
+.p-info{flex:1;min-width:0}
 .p-info h2{font-size:1.15rem;font-weight:400;color:#1a1a1a;margin-bottom:.4rem}
 @media(prefers-color-scheme:dark){.p-info h2{color:#f0ece0}}
 .meta{display:flex;flex-wrap:wrap;gap:10px 18px}
 .mi{font-size:.73rem;color:#888;display:flex;align-items:center;gap:5px}
 .ml{color:var(--gold-m);text-transform:uppercase;letter-spacing:.07em;font-size:.65rem}
+/* MIDI export button in header */
+.midi-btn{display:inline-flex;align-items:center;gap:6px;margin-top:.7rem;padding:5px 12px;background:transparent;border:1px solid var(--gold-b);border-radius:4px;color:var(--gold-m);font-family:Georgia,serif;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+.midi-btn:hover{border-color:var(--gold);background:var(--gold-l);color:var(--gold)}
+.midi-btn svg{width:13px;height:13px;flex-shrink:0}
 .pp{padding:.8rem 1.3rem;border-bottom:1px solid var(--gold-b)}
 .ptrack{height:4px;background:var(--gold-b);border-radius:2px;cursor:pointer;position:relative}
 .pfill{height:100%;background:var(--gold);border-radius:2px;width:0%;transition:width .1s linear}
@@ -71,17 +76,28 @@ body{background:#fff;min-height:100vh}
 .tval{font-size:.82rem;color:var(--gold);min-width:26px;text-align:right}
 input[type=range]{-webkit-appearance:none;width:72px;height:2px;background:var(--gold-b);outline:none;cursor:pointer}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--gold);cursor:pointer}
+/* Voice rows with mute/solo */
 .vs{padding:.8rem 1.3rem;border-bottom:1px solid var(--gold-b)}
-.sec-ttl{font-size:.68rem;text-transform:uppercase;letter-spacing:.15em;color:#888;margin-bottom:.6rem}
+.vs-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
+.sec-ttl{font-size:.68rem;text-transform:uppercase;letter-spacing:.15em;color:#888}
+.solo-all{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#888;cursor:pointer;padding:2px 7px;border:1px solid var(--gold-b);border-radius:3px;background:transparent;transition:color .2s,border-color .2s}
+.solo-all:hover{color:var(--gold);border-color:var(--gold)}
 .vl{display:flex;flex-direction:column;gap:5px}
-.vi{display:flex;align-items:center;gap:9px;padding:6px 9px;background:#fff;border-radius:5px;border:1px solid var(--gold-b)}
+.vi{display:flex;align-items:center;gap:9px;padding:6px 9px;background:#fff;border-radius:5px;border:1px solid var(--gold-b);transition:opacity .2s}
 @media(prefers-color-scheme:dark){.vi{background:#1e1e1a}}
+.vi.muted{opacity:.35}
 .vdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .vn{font-size:.84rem;color:#1a1a1a;flex:1}
 @media(prefers-color-scheme:dark){.vn{color:#f0ece0}}
-.vnc{font-size:.7rem;color:#888}
+.vnc{font-size:.7rem;color:#888;margin-right:4px}
+/* Mute / Solo buttons */
+.vbtns{display:flex;gap:4px;flex-shrink:0}
+.vbtn{width:24px;height:20px;border-radius:3px;font-size:.6rem;font-weight:600;letter-spacing:.04em;cursor:pointer;border:1px solid var(--gold-b);background:transparent;color:#888;transition:background .15s,color .15s,border-color .15s;font-family:Georgia,serif}
+.vbtn.m-btn:hover,.vbtn.m-btn.active{background:#c0392b;border-color:#c0392b;color:#fff}
+.vbtn.s-btn:hover,.vbtn.s-btn.active{background:var(--gold);border-color:var(--gold);color:#fff}
 .np{padding:.8rem 1.3rem}
-.ng{display:flex;flex-wrap:wrap;gap:4px;max-height:100px;overflow-y:auto;margin-top:.4rem}
+.np-ttl{font-size:.68rem;text-transform:uppercase;letter-spacing:.15em;color:#888;margin-bottom:.4rem}
+.ng{display:flex;flex-wrap:wrap;gap:4px;max-height:100px;overflow-y:auto}
 .nc{padding:2px 6px;background:var(--gold-l);border:1px solid var(--gold-b);border-radius:3px;font-size:.68rem;font-family:monospace;color:#888}
 .prev-wrap{display:none;margin-top:.9rem;border:1px solid var(--gold-b);border-radius:8px;overflow:hidden;background:#fafaf8}
 @media(prefers-color-scheme:dark){.prev-wrap{background:#242420}}
@@ -108,7 +124,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
     <div class="hd-rule"><div class="hd-line"></div><span class="hd-sym">&#119070;</span><div class="hd-line"></div></div>
   </div>
 
-  <!-- 1. Drop zone -->
   <div id="uz" class="upzone z">
     <span class="up-ico">&#127932;</span>
     <h2 class="up-ttl">Drop your score here</h2>
@@ -119,10 +134,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
     <input type="file" id="fi" accept="image/*,.pdf,application/pdf">
   </div>
 
-  <!-- 2. Transcribe button -->
   <button class="conv-btn z" id="cb">&#9758; Transcribe &amp; Play</button>
 
-  <!-- 3. Loading / error -->
   <div class="loading z" id="ld">
     <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
     <p class="ld-txt" id="lt">Reading the score&hellip;</p>
@@ -130,7 +143,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   </div>
   <div class="err-box z" id="eb"></div>
 
-  <!-- 4. Player -->
+  <!-- Player -->
   <div class="player z" id="pl">
     <div class="pcard">
       <div class="ph">
@@ -144,6 +157,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
             <div class="mi"><span class="ml">Measures</span><span id="mc">0</span></div>
             <div class="mi"><span class="ml">Pages</span><span id="pgc">1</span></div>
           </div>
+          <!-- MIDI export button -->
+          <button class="midi-btn" id="midi-btn">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M8 2v8M5 7l3 3 3-3M3 12h10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Export MIDI
+          </button>
         </div>
       </div>
       <div class="pp">
@@ -160,17 +180,20 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
         </div>
       </div>
       <div class="vs">
-        <p class="sec-ttl">String Voices</p>
+        <div class="vs-hdr">
+          <span class="sec-ttl">String Voices</span>
+          <button class="solo-all" id="clear-solo">Clear Solo</button>
+        </div>
         <div class="vl" id="vl"></div>
       </div>
       <div class="np">
-        <p class="sec-ttl">Extracted Notes</p>
+        <p class="np-ttl">Extracted Notes</p>
         <div class="ng" id="ng"></div>
       </div>
     </div>
   </div>
 
-  <!-- 5. File preview -->
+  <!-- File preview -->
   <div class="prev-wrap z" id="pw">
     <div id="pdf-pages"></div>
     <img id="prev-img" alt="Sheet music preview" style="display:none">
@@ -191,11 +214,17 @@ PDFJS.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.
 window._PDFJS=PDFJS;
 </script>
 <script>
+// ── State ──────────────────────────────────────────────
 var fileB64=null,fileMime='image/jpeg',fileIsPDF=false,pdfPageCount=1;
 var musicData=null,synths={},baseEvents=[];
 var isPlaying=false,progTimer=null,totalDur=0,curTempo=120;
 var vcColors=['#BA7517','#1D9E75','#378ADD','#D85A30','#993556','#533AB7'];
+// mute/solo state — keyed by voice name
+var muteState={};  // voiceName -> true if muted
+var soloState={};  // voiceName -> true if soloed
+var voiceNames=[];
 
+// ── DOM refs ───────────────────────────────────────────
 var uz=document.getElementById('uz'),fi=document.getElementById('fi');
 var pw=document.getElementById('pw'),prevImg=document.getElementById('prev-img'),pdfPages=document.getElementById('pdf-pages');
 var pn=document.getElementById('pn'),pm=document.getElementById('pm'),rmb=document.getElementById('rmb');
@@ -204,7 +233,10 @@ var eb=document.getElementById('eb'),pl=document.getElementById('pl');
 var playb=document.getElementById('playb'),stopb=document.getElementById('stopb');
 var tsl=document.getElementById('tsl'),tvEl=document.getElementById('tv');
 var pfEl=document.getElementById('pf'),teEl=document.getElementById('te'),ttEl=document.getElementById('tt');
+var midiBtn=document.getElementById('midi-btn');
+var clearSoloBtn=document.getElementById('clear-solo');
 
+// ── File handling ──────────────────────────────────────
 uz.addEventListener('click',function(){fi.click()});
 uz.addEventListener('dragover',function(e){e.preventDefault();uz.classList.add('over')});
 uz.addEventListener('dragleave',function(){uz.classList.remove('over')});
@@ -218,6 +250,12 @@ tsl.addEventListener('input',function(){
   curTempo=parseInt(this.value);tvEl.textContent=this.value;
   document.getElementById('td').textContent=this.value+'\u266a';
   if(isPlaying||Tone.Transport.state!=='stopped')doStop();
+});
+midiBtn.addEventListener('click',exportMIDI);
+clearSoloBtn.addEventListener('click',function(){
+  voiceNames.forEach(function(n){soloState[n]=false;});
+  refreshVoiceUI();
+  if(isPlaying||Tone.Transport.state==='paused')doStop();
 });
 
 function reset(){
@@ -264,6 +302,7 @@ async function renderPDFPreview(dataURL){
   }catch(err){pdfPages.innerHTML='<div style="padding:1rem;color:#c0392b;font-size:.8rem">PDF preview failed: '+err.message+'</div>';}
 }
 
+// ── Transcription ──────────────────────────────────────
 var DUR={'1n':4,'2n':2,'4n':1,'8n':.5,'16n':.25,'32n':.125,'d1n':6,'d2n':3,'d4n':1.5,'d8n':.75,'d16n':.375,'4t':2/3,'8t':1/3,'2t':4/3};
 
 async function convert(){
@@ -280,8 +319,7 @@ async function convert(){
 
   try{
     lstep.textContent='AI reading notation…';
-    // ── Calls YOUR proxy at /api/transcribe — no API key in frontend ──
-    var res = await fetch('https://scorevoice.scorevoice.workers.dev', {
+    var res=await fetch('https://scorevoice.workers.dev',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:16000,temperature:0,messages:[{role:'user',content:content}]})
@@ -291,40 +329,8 @@ async function convert(){
     var d=await res.json();
     var raw=d.content.filter(function(b){return b.type==='text'}).map(function(b){return b.text}).join('');
     var js=raw.trim();
-
-    // strip markdown fences if present
     var m1=js.match(/```(?:json)?\s*([\s\S]+?)\s*```/);if(m1)js=m1[1];
-    // extract outermost JSON object
     var m2=js.match(/\{[\s\S]+/);if(m2)js=m2[0];
-
-    // ── JSON repair: close any unclosed brackets/braces ──
-    function repairJSON(str){
-      // remove trailing comma before a closing bracket or brace
-      str=str.replace(/,\s*([\]\}])/g,'$1');
-      // remove any trailing comma at the very end
-      str=str.replace(/,\s*$/,'');
-      // count and close unclosed structures
-      var stack=[];
-      var inStr=false,escape=false;
-      for(var i=0;i<str.length;i++){
-        var c=str[i];
-        if(escape){escape=false;continue}
-        if(c==='\\' && inStr){escape=true;continue}
-        if(c==='"'){inStr=!inStr;continue}
-        if(inStr)continue;
-        if(c==='{')stack.push('}');
-        else if(c==='[')stack.push(']');
-        else if(c==='}' || c===']'){
-          if(stack.length && stack[stack.length-1]===c)stack.pop();
-        }
-      }
-      // if we ended mid-string, close it
-      if(inStr)str+='"';
-      // close all open structures in reverse
-      while(stack.length)str+=stack.pop();
-      return str;
-    }
-
     js=repairJSON(js);
     musicData=JSON.parse(js);
     if(!musicData.voices||!musicData.voices.length)throw new Error('No musical voices found');
@@ -339,6 +345,26 @@ async function convert(){
   }
 }
 
+function repairJSON(str){
+  str=str.replace(/,\s*([\]\}])/g,'$1');
+  str=str.replace(/,\s*$/,'');
+  var stack=[],inStr=false,escape=false;
+  for(var i=0;i<str.length;i++){
+    var c=str[i];
+    if(escape){escape=false;continue}
+    if(c==='\\'&&inStr){escape=true;continue}
+    if(c==='"'){inStr=!inStr;continue}
+    if(inStr)continue;
+    if(c==='{')stack.push('}');
+    else if(c==='[')stack.push(']');
+    else if(c==='}'||c===']'){if(stack.length&&stack[stack.length-1]===c)stack.pop();}
+  }
+  if(inStr)str+='"';
+  while(stack.length)str+=stack.pop();
+  return str;
+}
+
+// ── Synth builder ──────────────────────────────────────
 async function buildSynths(data){
   Object.values(synths).forEach(function(s){try{s.dispose()}catch(e){}});synths={};
   var rev=new Tone.Reverb({decay:3,wet:0.28});await rev.ready;
@@ -373,18 +399,40 @@ function buildEvents(data){
   });
 }
 
+// ── Mute / Solo helpers ────────────────────────────────
+function isVoiceAudible(vn){
+  var anySolo=voiceNames.some(function(n){return soloState[n]});
+  if(anySolo)return !!soloState[vn];
+  return !muteState[vn];
+}
+
+function refreshVoiceUI(){
+  voiceNames.forEach(function(vn){
+    var row=document.getElementById('vrow-'+CSS.escape(vn));
+    var mBtn=document.getElementById('mbtn-'+CSS.escape(vn));
+    var sBtn=document.getElementById('sbtn-'+CSS.escape(vn));
+    if(!row)return;
+    var audible=isVoiceAudible(vn);
+    row.classList.toggle('muted',!audible);
+    if(mBtn)mBtn.classList.toggle('active',!!muteState[vn]);
+    if(sBtn)sBtn.classList.toggle('active',!!soloState[vn]);
+  });
+}
+
+// ── Transport playback ─────────────────────────────────
 function scheduleAll(){
   Tone.Transport.cancel();
   Tone.Transport.bpm.value=curTempo;
   var spb=60/curTempo;
   baseEvents.forEach(function(ev){
+    if(!isVoiceAudible(ev.vn))return;
     Tone.Transport.schedule(function(time){
       var sy=synths[ev.vn];if(!sy)return;
       try{sy.triggerAttackRelease(ev.pitch,(ev.beatD*spb)+'',time)}catch(e){}
     },ev.beatT*spb);
   });
   var maxBeat=baseEvents.length?Math.max.apply(null,baseEvents.map(function(e){return e.beatT+e.beatD})):0;
-  totalDur=maxBeat*(60/curTempo);
+  totalDur=maxBeat*spb;
   ttEl.textContent=fmt(totalDur);
   Tone.Transport.schedule(function(){doStop();},(totalDur+0.3)+'');
 }
@@ -394,8 +442,7 @@ async function doPlay(){
   await Tone.start();
   if(Tone.Transport.state==='stopped'){scheduleAll();Tone.Transport.start();}
   else if(Tone.Transport.state==='paused'){Tone.Transport.start();}
-  isPlaying=true;
-  playb.innerHTML='&#9646;&#9646;';
+  isPlaying=true;playb.innerHTML='&#9646;&#9646;';
   clearInterval(progTimer);
   progTimer=setInterval(function(){
     if(!isPlaying)return;
@@ -424,6 +471,118 @@ function fmt(s){
   return m+':'+(sc<10?'0':'')+sc;
 }
 
+// ── MIDI Export (pure JS encoder) ─────────────────────
+function noteNameToMidi(name){
+  var m=name.match(/^([A-Ga-g])([#b]?)(-?\d+)$/);
+  if(!m)return null;
+  var notes={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  var base=notes[m[1].toUpperCase()];
+  var acc=m[2]==='#'?1:m[2]==='b'?-1:0;
+  var oct=parseInt(m[3]);
+  return (oct+1)*12+base+acc;
+}
+
+function writeVarLen(v){
+  var out=[];
+  out.push(v&0x7F);
+  v>>=7;
+  while(v>0){out.unshift((v&0x7F)|0x80);v>>=7;}
+  return out;
+}
+
+function int32(v){return[(v>>24)&0xFF,(v>>16)&0xFF,(v>>8)&0xFF,v&0xFF]}
+function int16(v){return[(v>>8)&0xFF,v&0xFF]}
+
+function exportMIDI(){
+  if(!musicData||!baseEvents.length)return;
+  var PPQ=480;
+  var spb=60/curTempo;
+  var usPerBeat=Math.round(60000000/curTempo);
+
+  // group events by voice
+  var byVoice={};
+  voiceNames.forEach(function(vn){byVoice[vn]=[]});
+  baseEvents.forEach(function(ev){
+    if(byVoice[ev.vn])byVoice[ev.vn].push(ev);
+  });
+
+  var allBytes=[];
+
+  // MThd header — format 1 (multi-track), N tracks = voices + 1 tempo track
+  var nTracks=voiceNames.length+1;
+  allBytes=allBytes.concat([0x4D,0x54,0x68,0x64]); // MThd
+  allBytes=allBytes.concat(int32(6));               // chunk length
+  allBytes=allBytes.concat(int16(1));               // format 1
+  allBytes=allBytes.concat(int16(nTracks));         // num tracks
+  allBytes=allBytes.concat(int16(PPQ));             // PPQ
+
+  // Tempo track
+  var tempoTrack=[];
+  tempoTrack=tempoTrack.concat([0x00,0xFF,0x51,0x03]); // delta=0, set tempo
+  tempoTrack=tempoTrack.concat([(usPerBeat>>16)&0xFF,(usPerBeat>>8)&0xFF,usPerBeat&0xFF]);
+  // Track name
+  var tname=musicData.title||'ScoreVoice';
+  var tnBytes=[];for(var ci=0;ci<tname.length;ci++)tnBytes.push(tname.charCodeAt(ci)&0xFF);
+  tempoTrack=tempoTrack.concat([0x00,0xFF,0x03,tnBytes.length]).concat(tnBytes);
+  // End of track
+  tempoTrack=tempoTrack.concat([0x00,0xFF,0x2F,0x00]);
+  allBytes=allBytes.concat([0x4D,0x54,0x72,0x6B]); // MTrk
+  allBytes=allBytes.concat(int32(tempoTrack.length));
+  allBytes=allBytes.concat(tempoTrack);
+
+  // One track per voice
+  voiceNames.forEach(function(vn,vi){
+    var events=byVoice[vn]||[];
+    var channel=vi%16;
+    // program change: violin=40, viola=41, cello=42, bass=43
+    var progMap={'violin i':40,'violin ii':40,'violin':40,'viola':41,'cello':42,'double bass':43,'bass':43};
+    var prog=progMap[(vn||'').toLowerCase()]||40;
+
+    // build flat note-on/note-off event list, sort by tick
+    var midiEvs=[];
+    events.forEach(function(ev){
+      var midi=noteNameToMidi(ev.pitch);
+      if(midi===null)return;
+      var startTick=Math.round(ev.beatT*PPQ);
+      var durTick=Math.max(1,Math.round(ev.beatD*PPQ));
+      midiEvs.push({tick:startTick,type:'on',midi:midi,ch:channel});
+      midiEvs.push({tick:startTick+durTick,type:'off',midi:midi,ch:channel});
+    });
+    midiEvs.sort(function(a,b){return a.tick-b.tick||(a.type==='off'?-1:1)});
+
+    var trackBytes=[];
+    // track name
+    var vnBytes=[];for(var ci=0;ci<vn.length;ci++)vnBytes.push(vn.charCodeAt(ci)&0xFF);
+    trackBytes=trackBytes.concat([0x00,0xFF,0x03,vnBytes.length]).concat(vnBytes);
+    // program change
+    trackBytes=trackBytes.concat([0x00,0xC0|channel,prog]);
+
+    var curTick=0;
+    midiEvs.forEach(function(ev){
+      var delta=ev.tick-curTick;curTick=ev.tick;
+      trackBytes=trackBytes.concat(writeVarLen(delta));
+      if(ev.type==='on')trackBytes=trackBytes.concat([0x90|ev.ch,ev.midi,80]);
+      else trackBytes=trackBytes.concat([0x80|ev.ch,ev.midi,0]);
+    });
+    trackBytes=trackBytes.concat([0x00,0xFF,0x2F,0x00]);
+    allBytes=allBytes.concat([0x4D,0x54,0x72,0x6B]);
+    allBytes=allBytes.concat(int32(trackBytes.length));
+    allBytes=allBytes.concat(trackBytes);
+  });
+
+  // Trigger download
+  var buf=new Uint8Array(allBytes);
+  var blob=new Blob([buf],{type:'audio/midi'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  var safeName=(musicData.title||'scorevoice').replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  a.href=url;a.download=safeName+'.mid';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url)},2000);
+}
+
+// ── Player UI ──────────────────────────────────────────
 function showPlayer(data){
   document.getElementById('st').textContent=data.title||'Untitled Score';
   document.getElementById('key-sig').textContent=data.keySignature||'Unknown';
@@ -435,11 +594,48 @@ function showPlayer(data){
   tsl.value=curTempo;tvEl.textContent=curTempo;
   var maxB=baseEvents.length?Math.max.apply(null,baseEvents.map(function(e){return e.beatT+e.beatD})):0;
   totalDur=maxB*(60/curTempo);ttEl.textContent=fmt(totalDur);
+
+  // init mute/solo
+  voiceNames=(data.voices||[]).map(function(v){return v.name});
+  muteState={};soloState={};
+  voiceNames.forEach(function(n){muteState[n]=false;soloState[n]=false;});
+
   var vl=document.getElementById('vl');vl.innerHTML='';
   (data.voices||[]).forEach(function(v,i){
     var nc=(v.measures||[]).reduce(function(a,ms){return a+(ms.notes||[]).length},0);
-    vl.innerHTML+='<div class="vi"><div class="vdot" style="background:'+vcColors[i%vcColors.length]+'"></div><span class="vn">'+v.name+'</span><span class="vnc">'+nc+' notes</span></div>';
+    var col=vcColors[i%vcColors.length];
+    var safeId=v.name.replace(/[^a-zA-Z0-9]/g,'_');
+    var row=document.createElement('div');
+    row.className='vi';row.id='vrow-'+safeId;
+    row.innerHTML=
+      '<div class="vdot" style="background:'+col+'"></div>'+
+      '<span class="vn">'+v.name+'</span>'+
+      '<span class="vnc">'+nc+' notes</span>'+
+      '<div class="vbtns">'+
+        '<button class="vbtn m-btn" id="mbtn-'+safeId+'" title="Mute">M</button>'+
+        '<button class="vbtn s-btn" id="sbtn-'+safeId+'" title="Solo">S</button>'+
+      '</div>';
+    vl.appendChild(row);
+
+    // Mute
+    document.getElementById('mbtn-'+safeId).addEventListener('click',(function(vname){
+      return function(){
+        muteState[vname]=!muteState[vname];
+        refreshVoiceUI();
+        if(isPlaying||Tone.Transport.state==='paused')doStop();
+      };
+    })(v.name));
+
+    // Solo
+    document.getElementById('sbtn-'+safeId).addEventListener('click',(function(vname){
+      return function(){
+        soloState[vname]=!soloState[vname];
+        refreshVoiceUI();
+        if(isPlaying||Tone.Transport.state==='paused')doStop();
+      };
+    })(v.name));
   });
+
   var ng=document.getElementById('ng');ng.innerHTML='';
   baseEvents.slice(0,100).forEach(function(ev){ng.innerHTML+='<span class="nc">'+ev.pitch+'</span>'});
   if(baseEvents.length>100)ng.innerHTML+='<span class="nc">+'+(baseEvents.length-100)+' more</span>';
