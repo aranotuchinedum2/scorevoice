@@ -30,7 +30,7 @@
 
 ## 🖥️ Demo
 
-1. Visit [scorevoice.vercel.app](https://scorevoice-eta.vercel.app)
+1. Visit [scorevoice-eta.vercel.app](https://scorevoice-eta.vercel.app)
 2. Drop your sheet music (PDF or image)
 3. Click **Transcribe & Play**
 4. Hit ▶ — or export the MIDI and open it in GarageBand
