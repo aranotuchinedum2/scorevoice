@@ -319,7 +319,7 @@ async function convert(){
 
   try{
     lstep.textContent='AI reading notation…';
-    var res=await fetch('https://scorevoice.workers.dev',{
+    var res=await fetch('https://scorevoice.scorevoice.workers.dev',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:16000,temperature:0,messages:[{role:'user',content:content}]})
